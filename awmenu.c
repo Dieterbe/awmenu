@@ -96,14 +96,18 @@ midori_location_entry_render_text_cb (GtkCellLayout* layout, GtkCellRenderer* re
     }
     if (G_LIKELY (data && str)) {
         temp = g_ascii_strdown (str, -1);
-        if (start = strstr (temp, search)) {
-            len = strlen (search);
-            ssearch = g_malloc0 (len + 1);
-            strncpy (ssearch, str + (start - temp), len);
-            if (ssearch && *ssearch && (parts = g_strsplit (str, ssearch, 2))) {
-                if (parts[0] && parts[1]) {
-                    desc = g_markup_printf_escaped ("%s<b>%s</b>%s", parts[0], ssearch, parts[1]);
-                    g_strfreev (parts);
+        gchar** searchparts = g_strsplit (str, " ", 0);
+        int i;
+        for (i = 0; i < sizeof(searchparts)/sizeof(gchar *); i ++) {
+            if (start = strstr (temp, searchparts[i])) {
+                len = strlen (searchparts[i]);
+                ssearch = g_malloc0 (len + 1);
+                strncpy (ssearch, str + (start - temp), len);
+                if (ssearch && *ssearch && (parts = g_strsplit (str, ssearch, 2))) {
+                    if (parts[0] && parts[1]) {
+                        desc = g_markup_printf_escaped ("%s<b>%s</b>%s", parts[0], ssearch, parts[1]);
+                        g_strfreev (parts);
+                    }
                 }
             }
             g_free (ssearch);
@@ -111,8 +115,7 @@ midori_location_entry_render_text_cb (GtkCellLayout* layout, GtkCellRenderer* re
         g_free (temp);
     }
 
-    g_object_set (renderer, "markup", desc,
-       "ellipsize-set", TRUE, "ellipsize", PANGO_ELLIPSIZE_END, NULL);
+    g_object_set (renderer, "markup", desc, "ellipsize-set", TRUE, "ellipsize", PANGO_ELLIPSIZE_END, NULL);
 
     g_free (str);
     g_free (search);  
