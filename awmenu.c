@@ -12,6 +12,10 @@
  * -> original entrycompletion code http://coding.debuntu.org/c-gtk-text-completion-gtkentry-gtkentrycompletion
  *
  * Dmenu writers.  See LICENCE-dmenu
+ * -> stdin reading :)
+ *
+ * Copyright (C) 2008 Christian Dywan <christian@twotoasts.de>, Dale Whittaker <dayul@users.sf.net>
+ * -> layout function taken from Midori. 
  *
  * Dieter Plaetinck <dieter@plaetinck.be>
  * -> enhancements to form awmenu
@@ -71,6 +75,50 @@ activate_cb (GtkEntry *entry, gpointer user_data ) {
     return FALSE;
 }
 
+static void
+midori_location_entry_render_text_cb (GtkCellLayout* layout, GtkCellRenderer* renderer, GtkTreeModel* model, GtkTreeIter* iter, gpointer data)
+{
+    gchar* str;
+    gchar* desc;
+    GtkWidget* entry;
+    gchar* search;
+    gchar* start;
+    gchar* ssearch;   
+    gchar* temp;
+    gchar** parts;  
+    size_t len;
+    gtk_tree_model_get (model, iter, 0, &str, -1);
+    search = NULL;
+    if (G_LIKELY (data)) {
+        entry = gtk_entry_completion_get_entry (GTK_ENTRY_COMPLETION (data));
+        search = g_utf8_strdown (gtk_entry_get_text (GTK_ENTRY (entry)), -1);
+        len = 0;
+    }
+    if (G_LIKELY (data && str)) {
+        temp = g_ascii_strdown (str, -1);
+        if (start = strstr (temp, search)) {
+            len = strlen (search);
+            ssearch = g_malloc0 (len + 1);
+            strncpy (ssearch, str + (start - temp), len);
+            if (ssearch && *ssearch && (parts = g_strsplit (str, ssearch, 2))) {
+                if (parts[0] && parts[1]) {
+                    desc = g_markup_printf_escaped ("%s<b>%s</b>%s", parts[0], ssearch, parts[1]);
+                    g_strfreev (parts);
+                }
+            }
+            g_free (ssearch);
+        }
+        g_free (temp);
+    }
+
+    g_object_set (renderer, "markup", desc,
+       "ellipsize-set", TRUE, "ellipsize", PANGO_ELLIPSIZE_END, NULL);
+
+    g_free (str);
+    g_free (search);  
+    g_free (desc); 
+}
+
 static gboolean
 awesome_match_cb (GtkEntryCompletion* completion, const gchar* key, GtkTreeIter* iter, gpointer data) {
     GtkTreeModel* model;
@@ -116,6 +164,7 @@ int main(int argc, char **argv) {
     GtkWidget *window;
     GtkWidget *entry;
     GtkEntryCompletion *completion;
+    GtkCellRenderer* renderer;
 
     gtk_init (&argc, &argv);
 
@@ -132,6 +181,11 @@ int main(int argc, char **argv) {
     gtk_entry_set_completion(GTK_ENTRY(entry), completion);
     g_signal_connect(G_OBJECT (completion), "match-selected", G_CALLBACK (selected_cb), NULL);
     g_signal_connect(G_OBJECT (entry)     , "activate",       G_CALLBACK (activate_cb), NULL);
+
+    renderer = gtk_cell_renderer_text_new ();
+    gtk_cell_layout_pack_start (GTK_CELL_LAYOUT (completion), renderer, TRUE);
+    gtk_cell_layout_set_cell_data_func (GTK_CELL_LAYOUT (completion), renderer, midori_location_entry_render_text_cb, completion, NULL);
+
     gtk_entry_completion_set_match_func (completion, awesome_match_cb, NULL, NULL);
     model = gtk_list_store_new(1, G_TYPE_STRING);
     readstdin();
