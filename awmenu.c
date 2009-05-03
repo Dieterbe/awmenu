@@ -55,7 +55,7 @@ selected_cb (GtkEntryCompletion *widget, GtkTreeModel* model, GtkTreeIter *iter,
     (void) user_data;
     GValue value = {0, };
     gtk_tree_model_get_value(model, iter, 0, &value);
-    printf("selected cb\n");
+    //printf("selected cb\n");
     printf("%s\n",g_value_get_string(&value));
     g_value_unset(&value);
     gtk_main_quit();
@@ -65,7 +65,7 @@ selected_cb (GtkEntryCompletion *widget, GtkTreeModel* model, GtkTreeIter *iter,
 static gboolean
 activate_cb (GtkEntry *entry, gpointer user_data ) {
     (void) user_data;
-    printf("activate cb\n");
+    //printf("activate cb\n");
     printf("%s\n",gtk_entry_get_text(entry));
     gtk_main_quit();
     return FALSE;
@@ -77,26 +77,37 @@ awesome_match_cb (GtkEntryCompletion* completion, const gchar* key, GtkTreeIter*
     gchar* str;
     gboolean match;
     gchar* temp;
+    gchar * search;
     char *saveptr;
     const gchar* part;
 
     model = gtk_entry_completion_get_model (completion);
     gtk_tree_model_get (model, iter, 0, &str, -1);
-    printf("got %s\t",str);
-
-// TODO:
-//    part = (char *) strtok_r (str, " ", &saveptr);
-//    part = (char *) strtok_r (NULL, " ", &saveptr);
 
     match = FALSE;
     if (G_LIKELY (str))
     {
+        //printf("%s ######\t\t",str);
         temp = g_utf8_casefold (str, -1);
-        match = (strstr (temp, key) != NULL);
-        printf("match: %s\n", match? "yes" : "no");
+        search = g_utf8_casefold (key, -1);
+        part = (char *) strtok_r (search, " ", &saveptr);
+        if (part) {
+            //printf("%s", part);
+            match = (strstr (temp, part) != NULL);
+            //printf(" %s\t", match? "Y" : "N");
+            if (match) {
+                while(match && (part = (char *) strtok_r (NULL, " ", &saveptr)) != NULL) {
+                 // TODO: if we type 'aa aa' we should match 2 different aa strings.
+                    //printf("%s", part);
+                    //printf(" %s\t", match? "Y" : "N");
+                          //  g_free (part);
+                    match = (strstr (temp, part) != NULL);
+                }
+            }
+        }
         g_free (temp);
         g_free (str);
-
+        //printf("%s\n", match? "TRUE" : "FALSE");
     }
     return match;
 }
