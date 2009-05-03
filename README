@@ -1,0 +1,9 @@
+This thingie takes the best ideas from different tools and brings them
+together:
+
+* dmenu is great for "selecting things" but it's matching is not very smart, it does not support copy/paste and it's not always convenient if you want a string that is not in the list
+* zenity is a nice tool but does not support text completion, nor advanced completion
+* firefox has a great matching system in their "awesomebar" but it's not a reusable component.
+
+Awmenu takes the basic idea from dmenu (pipe stuff into stdin, let user pick something, echo result on stdout) but implements it in Gtk to overcome some of the
+limitations, and applies awesome-like matching.

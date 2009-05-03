@@ -5,6 +5,8 @@ all: awmenu
 clean:
 	rm -f awmenu
 
+test: awmenu
+	./test.sh
 install:
 	install -d $(DESTDIR)/usr/bin
 	install -D -m755 awmenu $(DESTDIR)/usr/bin/awmenu
