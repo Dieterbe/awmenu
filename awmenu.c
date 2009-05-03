@@ -18,7 +18,6 @@
  */
 
 
-
 #include <stdio.h>
 #include <gtk/gtk.h>
 #include <string.h>
@@ -42,7 +41,6 @@ readstdin(void) {
         //printf("appended %s\n",buf);
     }
 }
-
 
 static void
 on_destroy(GtkWidget *widget, gpointer data) {
@@ -73,6 +71,36 @@ activate_cb (GtkEntry *entry, gpointer user_data ) {
     return FALSE;
 }
 
+static gboolean
+awesome_match_cb (GtkEntryCompletion* completion, const gchar* key, GtkTreeIter* iter, gpointer data) {
+    GtkTreeModel* model;
+    gchar* str;
+    gboolean match;
+    gchar* temp;
+    char *saveptr;
+    const gchar* part;
+
+    model = gtk_entry_completion_get_model (completion);
+    gtk_tree_model_get (model, iter, 0, &str, -1);
+    printf("got %s\t",str);
+
+// TODO:
+//    part = (char *) strtok_r (str, " ", &saveptr);
+//    part = (char *) strtok_r (NULL, " ", &saveptr);
+
+    match = FALSE;
+    if (G_LIKELY (str))
+    {
+        temp = g_utf8_casefold (str, -1);
+        match = (strstr (temp, key) != NULL);
+        printf("match: %s\n", match? "yes" : "no");
+        g_free (temp);
+        g_free (str);
+
+    }
+    return match;
+}
+
 int main(int argc, char **argv) {
     GtkWidget *window;
     GtkWidget *entry;
@@ -93,6 +121,7 @@ int main(int argc, char **argv) {
     gtk_entry_set_completion(GTK_ENTRY(entry), completion);
     g_signal_connect(G_OBJECT (completion), "match-selected", G_CALLBACK (selected_cb), NULL);
     g_signal_connect(G_OBJECT (entry)     , "activate",       G_CALLBACK (activate_cb), NULL);
+    gtk_entry_completion_set_match_func (completion, awesome_match_cb, NULL, NULL);
     model = gtk_list_store_new(1, G_TYPE_STRING);
     readstdin();
     gtk_entry_completion_set_model(completion, GTK_TREE_MODEL(model));
