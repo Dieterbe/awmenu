@@ -19,6 +19,8 @@
  *
  * Dieter Plaetinck <dieter@plaetinck.be>
  * -> enhancements to form awmenu
+ * Rob Manea
+ * make_transient function :)
  */
 
 
@@ -44,6 +46,19 @@ readstdin(void) {
         gtk_list_store_set(model, &iter, 0, buf, -1);
         //printf("appended %s\n",buf);
     }
+}
+
+static void
+make_transient (GtkWidget *win)
+{
+    GdkScreen *screen;
+    GdkWindow *root;
+
+    /* Make window transient for the root window */
+    screen = gdk_screen_get_default();
+    root = gdk_screen_get_root_window(screen);
+    gdk_window_set_transient_for(win->window, root);
+
 }
 
 static void
@@ -172,9 +187,9 @@ int main(int argc, char **argv) {
     gtk_init (&argc, &argv);
 
     window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
-    gtk_container_set_border_width (GTK_CONTAINER (window), 20);
+    //gtk_container_set_border_width (GTK_CONTAINER (window), 20);
     gtk_window_set_title (GTK_WINDOW (window), PACKAGE " " VERSION);
-    gtk_window_set_default_size (GTK_WINDOW (window), 200, 50);
+    gtk_window_set_default_size (GTK_WINDOW (window), 200, -1); //TODO: figure out size depending on input strings length
 
     g_signal_connect (G_OBJECT (window), "destroy", G_CALLBACK (on_destroy), NULL);
 
@@ -195,6 +210,7 @@ int main(int argc, char **argv) {
     gtk_entry_completion_set_model(completion, GTK_TREE_MODEL(model));
     gtk_container_add (GTK_CONTAINER (window), entry);
     gtk_widget_show_all (window);
+    make_transient (window);
     gtk_main ();
     return 0;
 }
