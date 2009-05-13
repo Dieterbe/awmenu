@@ -7,3 +7,8 @@ together:
 
 Awmenu takes the basic idea from dmenu (pipe stuff into stdin, let user pick something, echo result on stdout) but implements it in Gtk to overcome some of the
 limitations, and applies awesome-like matching.
+
+
+Possible performance bottlenecks:
+- I think (?) glib will reapply the filter function on all elements when you add characters, this is not needed (only need to apply it on the subset, and in fact, you don't even need to apply the new filter, just match for the new last word)
+- applying the filter and formatting the entries are 2 different steps, even though they share some logic
